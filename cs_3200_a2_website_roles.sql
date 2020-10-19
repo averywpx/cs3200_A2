@@ -93,10 +93,15 @@ DELIMITER ;
 /*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `website_roles_AFTER_UPDATE` AFTER UPDATE ON `website_roles` FOR EACH ROW BEGIN
+
+if new.role = 'admin' or new.role = 'owner' then
 delete from website_priviledges 
     where website_priviledges.website_id = old.website_id 
-		and website_priviledges.developer_id = old.developer_id;
-if new.role = 'admin' or new.role = 'owner' then
+		and website_priviledges.developer_id = old.developer_id
+        and (website_priviledges.priviledge = 'create' 
+             or website_priviledges.priviledge = 'read'
+             or website_priviledges.priviledge = 'update'
+             or website_priviledges.priviledge = 'delete');
     insert into website_priviledges value (null, 'create', new.website_id, new.developer_id);
     insert into website_priviledges value (null, 'update', new.website_id, new.developer_id);
     insert into website_priviledges value (null, 'delete', new.website_id, new.developer_id);
@@ -104,17 +109,32 @@ if new.role = 'admin' or new.role = 'owner' then
   end if;
 
   if new.role = 'writer' then
+  delete from website_priviledges 
+    where website_priviledges.website_id = old.website_id 
+		and website_priviledges.developer_id = old.developer_id
+        and (website_priviledges.priviledge = 'create' 
+             or website_priviledges.priviledge = 'read'
+             or website_priviledges.priviledge = 'update');
     insert into website_priviledges value (null, 'create', new.website_id, new.developer_id);
     insert into website_priviledges value (null, 'update', new.website_id, new.developer_id);
     insert into website_priviledges value (null, 'read', new.website_id, new.developer_id);
   end if;
   
   if new.role = 'editor' then
+  delete from website_priviledges 
+    where website_priviledges.website_id = old.website_id 
+		and website_priviledges.developer_id = old.developer_id
+        and (website_priviledges.priviledge = 'read'
+             or website_priviledges.priviledge = 'update');
     insert into website_priviledges value (null, 'update', new.website_id, new.developer_id);
     insert into website_priviledges value (null, 'read', new.website_id, new.developer_id);
   end if;
   
   if new.role = 'reviewer' then
+  delete from website_priviledges 
+    where website_priviledges.website_id = old.website_id 
+		and website_priviledges.developer_id = old.developer_id
+        and (website_priviledges.priviledge = 'read');
     insert into website_priviledges value (null, 'read', new.website_id, new.developer_id);
   end if;
 
@@ -134,9 +154,39 @@ DELIMITER ;
 /*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `website_roles_AFTER_DELETE` AFTER DELETE ON `website_roles` FOR EACH ROW BEGIN
-    delete from website_priviledges 
+ if old.role = 'admin' or old.role = 'owner' then
+delete from website_priviledges 
     where website_priviledges.website_id = old.website_id 
-		and website_priviledges.developer_id = old.developer_id;
+		and website_priviledges.developer_id = old.developer_id
+        and (website_priviledges.priviledge = 'create' 
+             or website_priviledges.priviledge = 'read'
+             or website_priviledges.priviledge = 'update'
+             or website_priviledges.priviledge = 'delete');
+  end if;
+
+  if old.role = 'writer' then
+  delete from website_priviledges 
+    where website_priviledges.website_id = old.website_id 
+		and website_priviledges.developer_id = old.developer_id
+        and (website_priviledges.priviledge = 'create' 
+             or website_priviledges.priviledge = 'read'
+             or website_priviledges.priviledge = 'update');
+  end if;
+  
+  if old.role = 'editor' then
+  delete from website_priviledges 
+    where website_priviledges.website_id = old.website_id 
+		and website_priviledges.developer_id = old.developer_id
+        and (website_priviledges.priviledge = 'read'
+             or website_priviledges.priviledge = 'update');
+  end if;
+  
+  if old.role = 'reviewer' then
+  delete from website_priviledges 
+    where website_priviledges.website_id = old.website_id 
+		and website_priviledges.developer_id = old.developer_id
+        and (website_priviledges.priviledge = 'read');
+  end if;
 
 END */;;
 DELIMITER ;
@@ -154,4 +204,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2020-10-18 23:22:46
+-- Dump completed on 2020-10-19 19:37:25

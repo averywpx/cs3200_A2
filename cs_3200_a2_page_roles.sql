@@ -153,9 +153,39 @@ DELIMITER ;
 /*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `page_roles_AFTER_DELETE` AFTER DELETE ON `page_roles` FOR EACH ROW BEGIN
+if old.role = 'admin' or old.role = 'owner' then
 delete from page_priviledges 
     where page_priviledges.page_id = old.page_id 
-		and page_priviledges.developer_id = old.developer_id;
+		and page_priviledges.developer_id = old.developer_id
+        and (page_priviledges.priviledge = 'create' 
+             or page_priviledges.priviledge = 'read'
+             or page_priviledges.priviledge = 'update'
+             or page_priviledges.priviledge = 'delete');
+  end if;
+
+  if oldrole = 'writer' then
+  delete from page_priviledges 
+    where page_priviledges.page_id = old.page_id 
+		and page_priviledges.developer_id = old.developer_id
+        and (page_priviledges.priviledge = 'create' 
+             or page_priviledges.priviledge = 'update'
+             or page_priviledges.priviledge = 'delete');
+  end if;
+  
+  if old.role = 'editor' then
+  delete from page_priviledges 
+    where page_priviledges.page_id = old.page_id 
+		and page_priviledges.developer_id = old.developer_id
+        and (page_priviledges.priviledge = 'read'
+             or page_priviledges.priviledge = 'update');
+  end if;
+  
+  if old.role = 'reviewer' then
+  delete from page_priviledges 
+    where page_priviledges.page_id = old.page_id 
+		and page_priviledges.developer_id = old.developer_id
+        and (page_priviledges.priviledge = 'read');
+  end if;
 END */;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -172,4 +202,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2020-10-18 23:22:48
+-- Dump completed on 2020-10-19 19:37:28
